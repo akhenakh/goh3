@@ -27,6 +27,7 @@ type GeoPolygon struct {
 
 func FromGeo(geo GeoCoord, res int) H3Index {
 	tls := libc.NewTLS()
+	defer tls.Close()
 
 	cgeo := ch3.TGeoCoord{
 		Flat: deg2rad * geo.Latitude,
@@ -38,6 +39,7 @@ func FromGeo(geo GeoCoord, res int) H3Index {
 
 func ToGeo(h H3Index) GeoCoord {
 	tls := libc.NewTLS()
+	defer tls.Close()
 
 	cg := ch3.TGeoCoord{}
 	ch3.Xh3ToGeo(tls, ch3.TH3Index(h), uintptr(unsafe.Pointer(&cg)))
