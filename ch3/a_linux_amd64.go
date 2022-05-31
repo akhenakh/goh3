@@ -9377,6 +9377,10 @@ func X_faceIjkToH3(tls *libc.TLS, fijk uintptr, res int32) TH3Index { /* h3Index
 	return h
 }
 
+func XisXFinite(tls *libc.TLS, f float64) uint8 { /* h3Index.c:727:6: */
+	return libc.BoolUint8(!(libc.X__builtin_isnan(tls, f-f) != 0))
+}
+
 // *
 // Encodes a coordinate on the sphere to the H3 index of the containing cell at
 // the specified resolution.
@@ -9386,18 +9390,16 @@ func X_faceIjkToH3(tls *libc.TLS, fijk uintptr, res int32) TH3Index { /* h3Index
 // @param g The spherical coordinates to encode.
 // @param res The desired H3 resolution for the encoding.
 // @return The encoded H3Index (or H3_NULL on failure).
-func XgeoToH3(tls *libc.TLS, g uintptr, res int32) TH3Index { /* h3Index.c:737:9: */
+func XgeoToH3(tls *libc.TLS, g uintptr, res int32) TH3Index { /* h3Index.c:739:9: */
 	bp := tls.Alloc(16)
 	defer tls.Free(16)
 
 	if res < 0 || res > DMAX_H3_RES {
 		return uint64(DH3_NULL)
 	}
-	//if (!isfinite(g->lat) || !isfinite(g->lon)) {
-	//         return H3_NULL;
-	//     }
-	//
-
+	if !(XisXFinite(tls, (*TGeoCoord)(unsafe.Pointer(g)).Flat) != 0) || !(XisXFinite(tls, (*TGeoCoord)(unsafe.Pointer(g)).Flon) != 0) {
+		return uint64(DH3_NULL)
+	}
 	// var fijk TFaceIJK at bp, 16
 
 	X_geoToFaceIjk(tls, g, res, bp)
@@ -9410,7 +9412,7 @@ func XgeoToH3(tls *libc.TLS, g uintptr, res int32) TH3Index { /* h3Index.c:737:9
 // @param fijk The FaceIJK address, initialized with the desired face
 //        and normalized base cell coordinates.
 // @return Returns 1 if the possibility of overage exists, otherwise 0.
-func X_h3ToFaceIjkWithInitializedFijk(tls *libc.TLS, h TH3Index, fijk uintptr) int32 { /* h3Index.c:758:5: */
+func X_h3ToFaceIjkWithInitializedFijk(tls *libc.TLS, h TH3Index, fijk uintptr) int32 { /* h3Index.c:759:5: */
 	var ijk uintptr = fijk + 4
 	var res int32 = int32(h & (uint64(15) << DH3_RES_OFFSET) >> DH3_RES_OFFSET)
 
@@ -9453,7 +9455,7 @@ func X_h3ToFaceIjkWithInitializedFijk(tls *libc.TLS, h TH3Index, fijk uintptr) i
 // Convert an H3Index to a FaceIJK address.
 // @param h The H3Index.
 // @param fijk The corresponding FaceIJK address.
-func X_h3ToFaceIjk(tls *libc.TLS, h TH3Index, fijk uintptr) { /* h3Index.c:789:6: */
+func X_h3ToFaceIjk(tls *libc.TLS, h TH3Index, fijk uintptr) { /* h3Index.c:790:6: */
 	var baseCell int32 = int32(h & (Tuint64_t(uint64(127)) << DH3_BC_OFFSET) >> DH3_BC_OFFSET)
 	// adjust for the pentagonal missing sequence; all of sub-sequence 5 needs
 	// to be adjusted (and some of sub-sequence 4 below)
@@ -9505,7 +9507,7 @@ func X_h3ToFaceIjk(tls *libc.TLS, h TH3Index, fijk uintptr) { /* h3Index.c:789:6
 //
 // @param h3 The H3 index.
 // @param g The spherical coordinates of the H3 cell center.
-func Xh3ToGeo(tls *libc.TLS, h3 TH3Index, g uintptr) { /* h3Index.c:838:6: */
+func Xh3ToGeo(tls *libc.TLS, h3 TH3Index, g uintptr) { /* h3Index.c:839:6: */
 	bp := tls.Alloc(16)
 	defer tls.Free(16)
 
@@ -9520,7 +9522,7 @@ func Xh3ToGeo(tls *libc.TLS, h3 TH3Index, g uintptr) { /* h3Index.c:838:6: */
 //
 // @param h3 The H3 index.
 // @param gb The boundary of the H3 cell in spherical coordinates.
-func Xh3ToGeoBoundary(tls *libc.TLS, h3 TH3Index, gb uintptr) { /* h3Index.c:850:6: */
+func Xh3ToGeoBoundary(tls *libc.TLS, h3 TH3Index, gb uintptr) { /* h3Index.c:851:6: */
 	bp := tls.Alloc(16)
 	defer tls.Free(16)
 
@@ -9541,7 +9543,7 @@ func Xh3ToGeoBoundary(tls *libc.TLS, h3 TH3Index, gb uintptr) { /* h3Index.c:850
 // may intersect.
 //
 // @return int count of faces
-func XmaxFaceCount(tls *libc.TLS, h3 TH3Index) int32 { /* h3Index.c:868:5: */
+func XmaxFaceCount(tls *libc.TLS, h3 TH3Index) int32 { /* h3Index.c:869:5: */
 	// a pentagon always intersects 5 faces, a hexagon never intersects more
 	// than 2 (but may only intersect 1)
 	if Xh3IsPentagon(tls, h3) != 0 {
@@ -9558,7 +9560,7 @@ func XmaxFaceCount(tls *libc.TLS, h3 TH3Index) int32 { /* h3Index.c:868:5: */
 //
 // @param h3 The H3 index
 // @param out Output array. Must be of size maxFaceCount(h3).
-func Xh3GetFaces(tls *libc.TLS, h3 TH3Index, out uintptr) { /* h3Index.c:883:6: */
+func Xh3GetFaces(tls *libc.TLS, h3 TH3Index, out uintptr) { /* h3Index.c:884:6: */
 	bp := tls.Alloc(116)
 	defer tls.Free(116)
 
@@ -9658,7 +9660,7 @@ func Xh3GetFaces(tls *libc.TLS, h3 TH3Index, out uintptr) { /* h3Index.c:883:6: 
 // pentagonIndexCount returns the number of pentagons (same at any resolution)
 //
 // @return int count of pentagon indexes
-func XpentagonIndexCount(tls *libc.TLS) int32 { /* h3Index.c:949:5: */
+func XpentagonIndexCount(tls *libc.TLS) int32 { /* h3Index.c:950:5: */
 	return DNUM_PENTAGONS
 }
 
@@ -9667,7 +9669,7 @@ func XpentagonIndexCount(tls *libc.TLS) int32 { /* h3Index.c:949:5: */
 //
 // @param res The resolution to produce pentagons at.
 // @param out Output array. Must be of size pentagonIndexCount().
-func XgetPentagonIndexes(tls *libc.TLS, res int32, out uintptr) { /* h3Index.c:957:6: */
+func XgetPentagonIndexes(tls *libc.TLS, res int32, out uintptr) { /* h3Index.c:958:6: */
 	bp := tls.Alloc(8)
 	defer tls.Free(8)
 
@@ -9702,7 +9704,7 @@ func XgetPentagonIndexes(tls *libc.TLS, res int32, out uintptr) { /* h3Index.c:9
 // @param res The H3 resolution.
 // @return 1 if the resolution is a Class III grid, and 0 if the resolution is
 //         a Class II grid.
-func XisResClassIII(tls *libc.TLS, res int32) int32 { /* h3Index.c:975:5: */
+func XisResClassIII(tls *libc.TLS, res int32) int32 { /* h3Index.c:976:5: */
 	return res % 2
 }
 

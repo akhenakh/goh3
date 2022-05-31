@@ -37,6 +37,18 @@ func FromGeo(geo GeoCoord, res int) H3Index {
 	return H3Index(ch3.XgeoToH3(tls, uintptr(unsafe.Pointer(&cgeo)), int32(res)))
 }
 
+func FromLatLng(lat, lng float64, res int) H3Index {
+	tls := libc.NewTLS()
+	defer tls.Close()
+
+	cgeo := ch3.TGeoCoord{
+		Flat: deg2rad * lat,
+		Flon: deg2rad * lng,
+	}
+
+	return H3Index(ch3.XgeoToH3(tls, uintptr(unsafe.Pointer(&cgeo)), int32(res)))
+}
+
 func ToGeo(h H3Index) GeoCoord {
 	tls := libc.NewTLS()
 	defer tls.Close()
