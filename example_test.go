@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func ExampleGeoToH3() {
+func ExampleFromGeo() {
 	geo := GeoCoord{
 		Latitude:  37.775938728915946,
 		Longitude: -122.41795063018799,
@@ -16,8 +16,14 @@ func ExampleGeoToH3() {
 	// Output:
 	// 0x8928308280fffff
 
+}
+
+func ExampleToGeo() {
+	h := H3Index(0x8928308280fffff)
+
 	g := ToGeo(h)
 	fmt.Printf("%f %f\n", g.Latitude, g.Longitude)
 	// Output:
 	// 37.776702 -122.418459
+
 }
