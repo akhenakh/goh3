@@ -17,13 +17,3 @@ func ExampleFromGeo() {
 	// 0x8928308280fffff
 
 }
-
-func ExampleToGeo() {
-	h := H3Index(0x8928308280fffff)
-
-	g := ToGeo(h)
-	fmt.Printf("%f %f\n", g.Latitude, g.Longitude)
-	// Output:
-	// 37.776702 -122.418459
-
-}
