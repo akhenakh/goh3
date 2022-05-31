@@ -19,7 +19,13 @@ type GeoCoord struct {
 	Latitude, Longitude float64
 }
 
-func GeoToH3(geo GeoCoord, res int) H3Index {
+type GeoPolygon struct {
+	Geofence []GeoCoord
+
+	Holes [][]GeoCoord
+}
+
+func FromGeo(geo GeoCoord, res int) H3Index {
 	tls := libc.NewTLS()
 
 	cgeo := ch3.TGeoCoord{
@@ -28,4 +34,16 @@ func GeoToH3(geo GeoCoord, res int) H3Index {
 	}
 
 	return H3Index(ch3.XgeoToH3(tls, uintptr(unsafe.Pointer(&cgeo)), int32(res)))
+}
+
+func ToGeo(h H3Index) GeoCoord {
+	tls := libc.NewTLS()
+
+	cg := ch3.TGeoCoord{}
+	ch3.Xh3ToGeo(tls, ch3.TH3Index(h), uintptr(unsafe.Pointer(&cg)))
+	g := GeoCoord{}
+	g.Latitude = rad2deg * float64(cg.Flat)
+	g.Longitude = rad2deg * float64(cg.Flon)
+
+	return g
 }
