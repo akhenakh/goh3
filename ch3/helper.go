@@ -1,11 +1,15 @@
 package ch3
 
-import "math"
+import (
+	"math"
 
-func Xfmin(a, b float64) float64 {
+	"modernc.org/libc"
+)
+
+func Xfmin(tls *libc.TLS, a, b float64) float64 {
 	return math.Min(a, b)
 }
 
-func Xlroundl(a float64) float64 {
+func Xlroundl(tls *libc.TLS, a float64) float64 {
 	return math.Round(a)
 }

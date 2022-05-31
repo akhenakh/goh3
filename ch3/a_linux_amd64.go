@@ -6053,7 +6053,7 @@ func XbboxHexEstimate(tls *libc.TLS, bbox uintptr, res int32) int32 { /* bbox.c:
 	var d float64 = XpointDistKm(tls, bp+96, bp+112)
 	// Derived constant based on: https://math.stackexchange.com/a/1921940
 	// Clamped to 3 as higher values tend to rapidly drag the estimate to zero.
-	var a float64 = d * d / Xfmin( 3.0, libc.Xfabs(tls, ((*TGeoCoord)(unsafe.Pointer(bp+96)).Flon-(*TGeoCoord)(unsafe.Pointer(bp+112)).Flon)/((*TGeoCoord)(unsafe.Pointer(bp+96)).Flat-(*TGeoCoord)(unsafe.Pointer(bp+112)).Flat)))
+	var a float64 = d * d / Xfmin(tls, 3.0, libc.Xfabs(tls, ((*TGeoCoord)(unsafe.Pointer(bp+96)).Flon-(*TGeoCoord)(unsafe.Pointer(bp+112)).Flon)/((*TGeoCoord)(unsafe.Pointer(bp+96)).Flat-(*TGeoCoord)(unsafe.Pointer(bp+112)).Flat)))
 
 	// Divide the two to get an estimate of the number of hexagons needed
 	var estimate int32 = libc.Int32FromFloat64(libc.Xceil(tls, a/pentagonAreaKm2))
@@ -6361,8 +6361,8 @@ func X_upAp7(tls *libc.TLS, ijk uintptr) { /* coordijk.c:275:6: */
 	var i int32 = (*TCoordIJK)(unsafe.Pointer(ijk)).Fi - (*TCoordIJK)(unsafe.Pointer(ijk)).Fk
 	var j int32 = (*TCoordIJK)(unsafe.Pointer(ijk)).Fj - (*TCoordIJK)(unsafe.Pointer(ijk)).Fk
 
-	(*TCoordIJK)(unsafe.Pointer(ijk)).Fi = int32(Xlroundl(float64(3*i-j)/7.0))
-	(*TCoordIJK)(unsafe.Pointer(ijk)).Fj = int32(Xlroundl(float64(i+2*j)/7.0))
+	(*TCoordIJK)(unsafe.Pointer(ijk)).Fi = int32(Xlroundl(tls, float64(3*i-j)/7.0))
+	(*TCoordIJK)(unsafe.Pointer(ijk)).Fj = int32(Xlroundl(tls, float64(i+2*j)/7.0))
 	(*TCoordIJK)(unsafe.Pointer(ijk)).Fk = 0
 	X_ijkNormalize(tls, ijk)
 }
@@ -6377,8 +6377,8 @@ func X_upAp7r(tls *libc.TLS, ijk uintptr) { /* coordijk.c:292:6: */
 	var i int32 = (*TCoordIJK)(unsafe.Pointer(ijk)).Fi - (*TCoordIJK)(unsafe.Pointer(ijk)).Fk
 	var j int32 = (*TCoordIJK)(unsafe.Pointer(ijk)).Fj - (*TCoordIJK)(unsafe.Pointer(ijk)).Fk
 
-	(*TCoordIJK)(unsafe.Pointer(ijk)).Fi = int32(Xlroundl(float64(2*i+j)/7.0))
-	(*TCoordIJK)(unsafe.Pointer(ijk)).Fj = int32(Xlroundl(float64(3*j-i)/7.0))
+	(*TCoordIJK)(unsafe.Pointer(ijk)).Fi = int32(Xlroundl(tls, float64(2*i+j)/7.0))
+	(*TCoordIJK)(unsafe.Pointer(ijk)).Fj = int32(Xlroundl(tls, float64(3*j-i)/7.0))
 	(*TCoordIJK)(unsafe.Pointer(ijk)).Fk = 0
 	X_ijkNormalize(tls, ijk)
 }
