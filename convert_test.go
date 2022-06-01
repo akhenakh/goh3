@@ -29,3 +29,12 @@ func TestConvertToGeo(t *testing.T) {
 	g := c.ToGeo(validH3Index)
 	assertGeoCoord(t, validGeoCoord, g)
 }
+
+func BenchmarkConvertToGeo(b *testing.B) {
+	c := NewConvert()
+	defer c.Close()
+
+	for i := 0; i < b.N; i++ {
+		c.ToGeo(validH3Index)
+	}
+}

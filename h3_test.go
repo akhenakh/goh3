@@ -44,3 +44,9 @@ func TestToGeo(t *testing.T) {
 	g := ToGeo(validH3Index)
 	assertGeoCoord(t, validGeoCoord, g)
 }
+
+func BenchmarkToGeo(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		ToGeo(validH3Index)
+	}
+}
