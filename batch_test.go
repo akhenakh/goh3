@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConvertFromGeo(t *testing.T) {
+func TestBatchFromGeo(t *testing.T) {
 	t.Parallel()
 
-	c := NewConvert()
+	c := NewBatch()
 	defer c.Close()
 
 	h := c.FromGeo(GeoCoord{
@@ -20,18 +20,18 @@ func TestConvertFromGeo(t *testing.T) {
 	assert.Equal(t, validH3Index, h)
 }
 
-func TestConvertToGeo(t *testing.T) {
+func TestBatchToGeo(t *testing.T) {
 	t.Parallel()
 
-	c := NewConvert()
+	c := NewBatch()
 	defer c.Close()
 
 	g := c.ToGeo(validH3Index)
 	assertGeoCoord(t, validGeoCoord, g)
 }
 
-func BenchmarkConvertToGeo(b *testing.B) {
-	c := NewConvert()
+func BenchmarkBatchToGeo(b *testing.B) {
+	c := NewBatch()
 	defer c.Close()
 
 	for i := 0; i < b.N; i++ {

@@ -7,15 +7,15 @@ import (
 	"modernc.org/libc"
 )
 
-type Convert struct {
+type Batch struct {
 	*libc.TLS
 }
 
-func NewConvert() *Convert {
-	return &Convert{TLS: libc.NewTLS()}
+func NewBatch() *Batch {
+	return &Batch{TLS: libc.NewTLS()}
 }
 
-func (c *Convert) FromGeo(geo GeoCoord, res int) H3Index {
+func (c *Batch) FromGeo(geo GeoCoord, res int) H3Index {
 	cgeo := ch3.TGeoCoord{
 		Flat: deg2rad * geo.Latitude,
 		Flon: deg2rad * geo.Longitude,
@@ -24,7 +24,7 @@ func (c *Convert) FromGeo(geo GeoCoord, res int) H3Index {
 	return H3Index(ch3.XgeoToH3(c.TLS, uintptr(unsafe.Pointer(&cgeo)), int32(res)))
 }
 
-func (c *Convert) ToGeo(h H3Index) GeoCoord {
+func (c *Batch) ToGeo(h H3Index) GeoCoord {
 	cg := ch3.TGeoCoord{}
 	ch3.Xh3ToGeo(c.TLS, ch3.TH3Index(h), uintptr(unsafe.Pointer(&cg)))
 	g := GeoCoord{}
@@ -34,6 +34,6 @@ func (c *Convert) ToGeo(h H3Index) GeoCoord {
 	return g
 }
 
-func (c *Convert) Close() {
+func (c *Batch) Close() {
 	c.TLS.Close()
 }
