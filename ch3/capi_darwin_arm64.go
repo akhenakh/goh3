@@ -180,6 +180,7 @@ var CAPI = map[string]struct{}{
 	"isClockwiseGeofence":                         {},
 	"isClockwiseLinkedGeoLoop":                    {},
 	"isResClassIII":                               {},
+	"isXfinite":                                   {},
 	"kRing":                                       {},
 	"kRingDistances":                              {},
 	"lineHexEstimate":                             {},
