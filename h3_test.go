@@ -217,7 +217,7 @@ func TestChildPosToCell(t *testing.T) {
 func TestChildPos(t *testing.T) {
 	t.Parallel()
 
-	childrens := validCell.Children(6)
+	childrens := validCell.Children(7)
 
-	assert.Equal(t, 1, childrens[1].ChildPos(5))
+	assert.Equal(t, 32, childrens[32].ChildPos(5))
 }
