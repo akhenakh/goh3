@@ -10,21 +10,24 @@ func (c Cell) ChildPos(res int) int
 
 WIP, use at your own risk
 
-# Thread local storage
+## Thread local storage
 
 This lib can achieve speed close to the C library by batching, lowering pressure on allocating the thread local storage.
 
-## Generation
+## Code Generation
 ```
   CC=/usr/bin/gcc ccgo  -pkgname ch3  -trace-translation-units -export-externs X -export-defines D -export-fields F -export-structs S -export-typedefs T -Isrc/h3lib/include  -I../src/h3lib/include ../src/h3lib/lib/*.c
 ```
 
 ## Patch h3 c sources to build on Linux (not needed on OSX)
 
-path the original source to avoid builtin isfinite isssue (tests are passing).
-```
+Patch the original source to avoid builtin isfinite isssue (C tests are passing).
+```C
 bool isXfinite(double f) { return !isnan(f - f); }
+```
 
+Replace occurence of isfinite() with isXfinite() eg:
+```C
 /**
  * Encodes a coordinate on the sphere to the H3 index of the containing cell at
  * the specified resolution.
