@@ -9,11 +9,11 @@ WIP, use at your own risk
   CC=/usr/bin/gcc ccgo  -pkgname ch3  -trace-translation-units -export-externs X -export-defines D -export-fields F -export-structs S -export-typedefs T -Isrc/h3lib/include  -I../src/h3lib/include ../src/h3lib/lib/*.c
 ```
 
-## Patch h3 c sources
+## Patch h3 c sources to build on Linux (not needed on OSX)
 
 path the original source to avoid builtin isfinite isssue (tests are passing).
 ```
-bool isXFinite(double f) { return !isnan(f - f); }
+bool isXfinite(double f) { return !isnan(f - f); }
 
 /**
  * Encodes a coordinate on the sphere to the H3 index of the containing cell at
