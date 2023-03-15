@@ -1,19 +1,16 @@
-package h3
+package h3_test
 
 import (
 	"fmt"
+
+	h3 "github.com/akhenakh/goh3"
 )
 
-func ExampleFromGeo() {
-	geo := GeoCoord{
-		Latitude:  37.775938728915946,
-		Longitude: -122.41795063018799,
-	}
+func ExampleLatLngToCell() {
+	latLng := h3.NewLatLng(37.775938728915946, -122.41795063018799)
 	resolution := 9
-
-	h := FromGeo(geo, resolution)
-	fmt.Printf("%#x\n", h)
+	c := h3.LatLngToCell(latLng, resolution)
+	fmt.Printf("%s", c)
 	// Output:
-	// 0x8928308280fffff
-
+	// 8928308280fffff
 }

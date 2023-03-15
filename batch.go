@@ -8,32 +8,32 @@ import (
 )
 
 type Batch struct {
-	*libc.TLS
+	tls *libc.TLS
 }
 
 func NewBatch() *Batch {
-	return &Batch{TLS: libc.NewTLS()}
+	return &Batch{tls: libc.NewTLS()}
 }
 
-func (c *Batch) FromGeo(geo GeoCoord, res int) H3Index {
-	cgeo := ch3.TGeoCoord{
-		Flat: deg2rad * geo.Latitude,
-		Flon: deg2rad * geo.Longitude,
-	}
+func (b *Batch) LatLngToCell(latLng LatLng, resolution int) Cell {
+	var i ch3.TH3Index
 
-	return H3Index(ch3.XgeoToH3(c.TLS, uintptr(unsafe.Pointer(&cgeo)), int32(res)))
+	cll := ch3.TLatLng{Flat: deg2rad * latLng.Lat, Flng: deg2rad * latLng.Lng}
+
+	ch3.XlatLngToCell(b.tls, uintptr(unsafe.Pointer(&cll)), int32(resolution), uintptr(unsafe.Pointer(&i)))
+
+	return Cell(i)
 }
 
-func (c *Batch) ToGeo(h H3Index) GeoCoord {
-	cg := ch3.TGeoCoord{}
-	ch3.Xh3ToGeo(c.TLS, ch3.TH3Index(h), uintptr(unsafe.Pointer(&cg)))
-	g := GeoCoord{}
-	g.Latitude = rad2deg * float64(cg.Flat)
-	g.Longitude = rad2deg * float64(cg.Flon)
+// CellToLatLng returns the geographic centerpoint of a Cell.
+func (b *Batch) CellToLatLng(c Cell) LatLng {
+	var g ch3.TLatLng
 
-	return g
+	ch3.XcellToLatLng(b.tls, ch3.TH3Index(c), uintptr(unsafe.Pointer(&g)))
+
+	return LatLng{rad2deg * g.Flat, rad2deg * g.Flng}
 }
 
-func (c *Batch) Close() {
-	c.TLS.Close()
+func (b *Batch) Close() {
+	b.tls.Close()
 }
