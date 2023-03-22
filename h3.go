@@ -42,16 +42,41 @@ type LatLng struct {
 	Lat, Lng float64
 }
 
+type OptionsFunc func(*Options)
+
+type Options struct {
+	TLS *libc.TLS
+}
+
+// WithMultipleFences enable multi fences in responses
+func WithTLS(tls *libc.TLS) OptionsFunc {
+	return func(o *Options) {
+		o.TLS = tls
+	}
+}
+
+func tlsFromOption(opts []OptionsFunc) *libc.TLS {
+	var lopts Options
+	for _, opt := range opts {
+		opt(&lopts)
+	}
+
+	return lopts.TLS
+}
+
 func NewLatLng(lat, lng float64) LatLng {
 	return LatLng{lat, lng}
 }
 
 // LatLngToCell returns the Cell at resolution for a geographic coordinate.
-func LatLngToCell(latLng LatLng, resolution int) Cell {
+func LatLngToCell(latLng LatLng, resolution int, opts ...OptionsFunc) Cell {
 	var i ch3.TH3Index
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	cll := ch3.TLatLng{Flat: deg2rad * latLng.Lat, Flng: deg2rad * latLng.Lng}
 
@@ -60,17 +85,23 @@ func LatLngToCell(latLng LatLng, resolution int) Cell {
 	return Cell(i)
 }
 
-func (c Cell) Resolution() int {
-	tls := libc.NewTLS()
-	defer tls.Close()
+func (c Cell) Resolution(opts ...OptionsFunc) int {
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	return int(ch3.XgetResolution(tls, ch3.TH3Index(c)))
 }
 
 // CellToLatLng returns the geographic centerpoint of a Cell.
-func CellToLatLng(c Cell) LatLng {
-	tls := libc.NewTLS()
-	defer tls.Close()
+func CellToLatLng(c Cell, opts ...OptionsFunc) LatLng {
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	var g ch3.TLatLng
 
@@ -80,8 +111,8 @@ func CellToLatLng(c Cell) LatLng {
 }
 
 // LatLng returns the Cell at resolution for a geographic coordinate.
-func (c Cell) LatLng() LatLng {
-	return CellToLatLng(c)
+func (c Cell) LatLng(opts ...OptionsFunc) LatLng {
+	return CellToLatLng(c, opts...)
 }
 
 func (c Cell) String() string {
@@ -89,19 +120,25 @@ func (c Cell) String() string {
 }
 
 // IsValid returns if a Cell is a valid cell (hexagon or pentagon).
-func (c Cell) IsValid() bool {
-	tls := libc.NewTLS()
-	defer tls.Close()
+func (c Cell) IsValid(opts ...OptionsFunc) bool {
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	return c != 0 && ch3.XisValidCell(tls, uint64(c)) == 1
 }
 
 // Parent returns the parent or grandparent Cell of this Cell.
-func (c Cell) Parent(resolution int) Cell {
+func (c Cell) Parent(resolution int, opts ...OptionsFunc) Cell {
 	var out H3Index
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XcellToParent(tls, uint64(c), int32(resolution), uintptr(unsafe.Pointer(&out)))
 
@@ -109,16 +146,19 @@ func (c Cell) Parent(resolution int) Cell {
 }
 
 // Parent returns the parent or grandparent Cell of this Cell.
-func (c Cell) ImmediateParent() Cell {
+func (c Cell) ImmediateParent(opts ...OptionsFunc) Cell {
 	return c.Parent(c.Resolution() - 1)
 }
 
 // Children returns the children or grandchildren cells of this Cell.
-func (c Cell) Children(resolution int) []Cell {
+func (c Cell) Children(resolution int, opts ...OptionsFunc) []Cell {
 	var outsz int
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XcellToChildrenSize(tls, uint64(c), int32(resolution), uintptr(unsafe.Pointer(&outsz)))
 	out := make([]H3Index, outsz)
@@ -186,46 +226,58 @@ func latLngFromC(cg ch3.TLatLng) LatLng {
 }
 
 // ImmediateChildren returns the children or grandchildren cells of this Cell.
-func (c Cell) ImmediateChildren() []Cell {
-	return c.Children(c.Resolution() + 1)
+func (c Cell) ImmediateChildren(opts ...OptionsFunc) []Cell {
+	return c.Children(c.Resolution()+1, opts...)
 }
 
 // IsPentagon returns true if this is a pentagon.
-func (c Cell) IsPentagon() bool {
-	tls := libc.NewTLS()
-	defer tls.Close()
+func (c Cell) IsPentagon(opts ...OptionsFunc) bool {
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	return ch3.XisPentagon(tls, uint64(c)) == 1
 }
 
 // IsNeighbor returns true if this Cell is a neighbor of the other Cell.
-func (c Cell) IsNeighbor(other Cell) bool {
+func (c Cell) IsNeighbor(other Cell, opts ...OptionsFunc) bool {
 	var out int
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XareNeighborCells(tls, uint64(c), uint64(other), uintptr(unsafe.Pointer(&out)))
 	return out == 1
 }
 
 // DirectedEdge returns a DirectedEdge from this Cell to other.
-func (c Cell) DirectedEdge(other Cell) DirectedEdge {
+func (c Cell) DirectedEdge(other Cell, opts ...OptionsFunc) DirectedEdge {
 	var out H3Index
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XcellsToDirectedEdge(tls, uint64(c), uint64(other), uintptr(unsafe.Pointer(&out)))
 	return DirectedEdge(out)
 }
 
 // DirectedEdges returns 6 directed edges with h as the origin.
-func (c Cell) DirectedEdges() []DirectedEdge {
+func (c Cell) DirectedEdges(opts ...OptionsFunc) []DirectedEdge {
 	out := make([]H3Index, numCellEdges) // always 6 directed edges
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XoriginToDirectedEdges(tls, uint64(c), uintptr(unsafe.Pointer(&out[0])))
 	return edgesFromC(out)
@@ -233,11 +285,14 @@ func (c Cell) DirectedEdges() []DirectedEdge {
 
 // ChildPosToCell returns the child cell at a given position within an ordered list of all
 // children at the specified resolution res.
-func (c Cell) ChildPosToCell(pos, res int) Cell {
+func (c Cell) ChildPosToCell(pos, res int, opts ...OptionsFunc) Cell {
 	var out H3Index
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XchildPosToCell(tls, int64(pos), uint64(c), int32(res), uintptr(unsafe.Pointer(&out)))
 
@@ -246,52 +301,67 @@ func (c Cell) ChildPosToCell(pos, res int) Cell {
 
 // ChildPos returns the position of the cell within an ordered list of all children of the cell's parent
 // at the specified resolution res.
-func (c Cell) ChildPos(res int) int {
+func (c Cell) ChildPos(res int, opts ...OptionsFunc) int {
 	var out int
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XcellToChildPos(tls, uint64(c), int32(res), uintptr(unsafe.Pointer(&out)))
 
 	return out
 }
 
-func (e DirectedEdge) IsValid() bool {
-	tls := libc.NewTLS()
-	defer tls.Close()
+func (e DirectedEdge) IsValid(opts ...OptionsFunc) bool {
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	return ch3.XisValidDirectedEdge(tls, uint64(e)) == 1
 }
 
 // Origin returns the origin cell of this directed edge.
-func (e DirectedEdge) Origin() Cell {
+func (e DirectedEdge) Origin(opts ...OptionsFunc) Cell {
 	var out H3Index
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XgetDirectedEdgeOrigin(tls, uint64(e), uintptr(unsafe.Pointer(&out)))
 	return Cell(out)
 }
 
 // Destination returns the destination cell of this directed edge.
-func (e DirectedEdge) Destination() Cell {
+func (e DirectedEdge) Destination(opts ...OptionsFunc) Cell {
 	var out H3Index
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XgetDirectedEdgeDestination(tls, uint64(e), uintptr(unsafe.Pointer(&out)))
 	return Cell(out)
 }
 
 // Cells returns the origin and destination cells in that order.
-func (e DirectedEdge) Cells() []Cell {
+func (e DirectedEdge) Cells(opts ...OptionsFunc) []Cell {
 	out := make([]H3Index, numEdgeCells)
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XdirectedEdgeToCells(tls, uint64(e), uintptr(unsafe.Pointer(&out[0])))
 
@@ -302,11 +372,14 @@ func (e DirectedEdge) Cells() []Cell {
 // the type returned is CellBoundary, but the coordinates will be from the
 // center of the origin to the center of the destination. There may be more than
 // 2 coordinates to account for crossing faces.
-func (e DirectedEdge) Boundary() CellBoundary {
+func (e DirectedEdge) Boundary(opts ...OptionsFunc) CellBoundary {
 	var out ch3.TCellBoundary
 
-	tls := libc.NewTLS()
-	defer tls.Close()
+	tls := tlsFromOption(opts)
+	if tls == nil {
+		tls = libc.NewTLS()
+		defer tls.Close()
+	}
 
 	ch3.XdirectedEdgeToBoundary(tls, uint64(e), uintptr(unsafe.Pointer(&out)))
 

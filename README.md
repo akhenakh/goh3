@@ -12,7 +12,16 @@ WIP, use at your own risk
 
 ## Thread local storage
 
-This lib can achieve speed close to the C library by batching, lowering pressure on allocating the thread local storage.
+This lib can achieve speed close to the h3 Go using CGO library by batching, lowering pressure on allocating the thread local storage.
+
+Each function is taking an optional `opts ...OptionsFunc`, you can pass your existing TLS: `WithTLS(tls)`.
+
+```go
+tls = libc.NewTLS()
+defer tls.Close()
+
+g := h3.CellToLatLng(validCell, h3.WithTLS(tls))
+```
 
 ## Code Generation
 ```
