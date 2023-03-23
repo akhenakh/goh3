@@ -209,15 +209,15 @@ func TestIsNeighbor(t *testing.T) {
 func TestChildPosToCell(t *testing.T) {
 	t.Parallel()
 
-	childrens := validCell.Children(6)
+	children := validCell.Children(6)
 
-	assert.Equal(t, childrens[0], validCell.ChildPosToCell(0, 6))
+	assert.Equal(t, children[0], validCell.ChildPosToCell(0, 6))
 }
 
 func TestChildPos(t *testing.T) {
 	t.Parallel()
 
-	childrens := validCell.Children(7)
+	children := validCell.Children(7)
 
-	assert.Equal(t, 32, childrens[32].ChildPos(5))
+	assert.Equal(t, 32, children[32].ChildPos(5))
 }
