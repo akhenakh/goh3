@@ -25,38 +25,6 @@ g := h3.CellToLatLng(validCell, h3.WithTLS(tls))
 
 ## Code Generation
 ```
-  CC=/usr/bin/gcc ccgo  -pkgname ch3  -trace-translation-units -export-externs X -export-defines D -export-fields F -export-structs S -export-typedefs T -Isrc/h3lib/include  -I../src/h3lib/include ../src/h3lib/lib/*.c
+CC=/usr/bin/gcc ccgo  -Isrc/h3lib/include  -I../src/h3lib/include ../src/h3lib/lib/*.c    --package-name=ch3 --prefix-enumerator=_ --prefix-external=X --prefix-field=F --prefix-macro=D --prefix-static-internal=_ --prefix-static-none=_ --prefix-tagged-enum=_ --prefix-tagged-struct=T --prefix-tagged-union=T --prefix-typename=T --prefix-undefined=_
 ```
 
-## Patch h3 c sources to build on Linux (not needed on OSX)
-
-Patch the original source to avoid builtin isfinite isssue (C tests are passing).
-```C
-bool isXfinite(double f) { return !isnan(f - f); }
-```
-
-Replace occurence of isfinite() with isXfinite() eg:
-```C
-/**
- * Encodes a coordinate on the sphere to the H3 index of the containing cell at
- * the specified resolution.
- *
- * Returns 0 on invalid input.
- *
- * @param g The spherical coordinates to encode.
- * @param res The desired H3 resolution for the encoding.
- * @return The encoded H3Index (or H3_NULL on failure).
- */
-H3Index H3_EXPORT(geoToH3)(const GeoCoord* g, int res) {
-    if (res < 0 || res > MAX_H3_RES) {
-        return H3_NULL;
-    }
-    if (!isXFinite(g->lat) || !isXFinite(g->lon)) {
-        return H3_NULL;
-    }
-
-    FaceIJK fijk;
-    _geoToFaceIjk(g, res, &fijk);
-    return _faceIjkToH3(&fijk, res);
-}
-```
